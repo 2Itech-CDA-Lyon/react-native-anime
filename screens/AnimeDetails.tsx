@@ -1,10 +1,11 @@
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { FC, useEffect, useState,useContext } from 'react';
-import { StatusBar, SafeAreaView, ScrollView, Text, StyleSheet } from 'react-native';
+import { StatusBar, SafeAreaView, ScrollView, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { IAnime, IGenre } from '../models';
 import { RootStackParamList } from '../navigation';
 import { AnimesContext } from '../contexts'
+import { Badge, Card, Image, Tile } from 'react-native-elements';
 
 // Avec react-navigation, les composants qui représentent des écrans reçoivent automatiquement deux props:
 // - navigation: qui contient un ensemble de fonctions permettant de changer d'écran
@@ -84,14 +85,26 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
       <SafeAreaView>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic">
-          <Text>{anime?.attributes.canonicalTitle}</Text>
 
-          {
-            genres.map(
-              (genre, index) =>
-                <Text>{genre.attributes.name}</Text>
-            )
-          }
+          <Tile
+            imageSrc={{ uri: anime?.attributes.posterImage?.small }}
+            title={anime?.attributes.canonicalTitle}
+          />
+
+          <View
+            style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-evenly' }}
+          >
+            {
+              genres.map(
+                (genre, index) =>
+                  <Badge
+                    badgeStyle={{ marginLeft: '.25em', marginRight: '.25em', marginBottom: '.25em' }}
+                    status="primary"
+                    value={genre.attributes.name}
+                  />
+              )
+            }
+          </View>
 
         </ScrollView>
       </SafeAreaView>
