@@ -2,7 +2,7 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { FC, useEffect, useState,useContext } from 'react';
 import { StatusBar, SafeAreaView, ScrollView, Text, StyleSheet } from 'react-native';
-import { IAnime } from '../models';
+import { IAnime, IGenre } from '../models';
 import { RootStackParamList } from '../navigation';
 import { AnimesContext } from '../contexts'
 
@@ -33,6 +33,8 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
   const { id } = route.params;
   // Retient l'état actuel de l'animé d'une exécution du composant à l'autre
   const [anime, setAnime] = useState<IAnime>();
+  const [genres, setGenres] = useState<IGenre[]>([]);
+
   const { actions, store } = useContext(AnimesContext);
 
   // Associe un comportement à la création du composant
@@ -59,6 +61,23 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
     [id]
   );
 
+  // Associe un comportement à la récupération des données de l'animé
+  useEffect(
+    () => {
+      // Si un animé a bien été récupéré
+      if (typeof anime !== 'undefined') {
+        // Vérifie que l'animé contient bien un lien vers une collection de "genres"
+        if (typeof anime.relationships.genres !== 'undefined' && anime.relationships.genres.links.related !== 'undefined') {
+          // Envoie une requête AJAX permettant de récupérer les genres de l'animé
+          fetch(`https://kitsu.io/api/edge/${anime.relationships.genres.links.related}`)
+          .then(response => response.json())
+          .then(json => setGenres(json.data))
+        }
+      }
+    },
+    [anime]
+  );
+
   return (
     <>
       <StatusBar barStyle="dark-content" />
@@ -66,6 +85,14 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
         <ScrollView
           contentInsetAdjustmentBehavior="automatic">
           <Text>{anime?.attributes.canonicalTitle}</Text>
+
+          {
+            genres.map(
+              (genre, index) =>
+                <Text>{genre.attributes.name}</Text>
+            )
+          }
+
         </ScrollView>
       </SafeAreaView>
     </>
