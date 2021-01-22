@@ -1,10 +1,12 @@
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { FC, useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { AnimeList } from '../components';
+import { Text } from 'react-native';
+import { Card } from 'react-native-elements';
+import { AnimeList, FetchedContent } from '../components';
 import { IAnime, ICollectionApiResponse, IGenre, IResourceApiResponse } from '../models';
 import { RootStackParamList } from '../navigation';
+import RequestState from '../request-state';
 
 // Avec react-navigation, les composants qui représentent des écrans reçoivent automatiquement deux props:
 // - navigation: qui contient un ensemble de fonctions permettant de changer d'écran
@@ -30,11 +32,18 @@ const GenreDetails: FC<GenreDetailsProps> = ({ route }) => {
 
   const [animes, setAnimes] = useState<IAnime[]>([]);
 
+  const [genreRequestState, setGenreRequestState] = useState(RequestState.Idle);
+  const [animesRequestState, setAnimesRequestState] = useState(RequestState.Idle);
+
   useEffect(
     () => {
+      setGenreRequestState(RequestState.Pending);
       fetch(`https://kitsu.io/api/edge/genres/${id}`)
       .then(response => response.json())
-      .then( (json: IResourceApiResponse<IGenre>) => setGenre(json.data) );
+      .then( (json: IResourceApiResponse<IGenre>) => {
+        setGenreRequestState(RequestState.Success);
+        setGenre(json.data);
+      });
     },
     [id]
   );
@@ -42,18 +51,29 @@ const GenreDetails: FC<GenreDetailsProps> = ({ route }) => {
   useEffect(
     () => {
       if (typeof genre !== 'undefined') {
+        setAnimesRequestState(RequestState.Pending);
         fetch(`https://kitsu.io/api/edge/anime?filter[genres]=${genre?.attributes.slug}`)
         .then(response => response.json())
-        .then( (json: ICollectionApiResponse<IAnime>) => setAnimes(json.data) );
+        .then( (json: ICollectionApiResponse<IAnime>) => {
+          setAnimesRequestState(RequestState.Success);
+          setAnimes(json.data);
+        });
       }
     },
     [genre]
   )
 
   return (
-    <View>
-      <AnimeList animes={animes} />
-    </View>
+    <FetchedContent requestState={genreRequestState}>
+      <Card>
+        <Card.Title>{genre?.attributes.name}</Card.Title>
+        {genre?.attributes.description && <Text>{genre?.attributes.description}</Text>}
+      </Card>
+
+      <FetchedContent requestState={animesRequestState}>
+        <AnimeList animes={animes} />
+      </FetchedContent>
+    </FetchedContent>
   );
 }
 
