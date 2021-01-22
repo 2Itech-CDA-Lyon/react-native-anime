@@ -1,11 +1,11 @@
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { FC, useEffect, useState,useContext } from 'react';
-import { StatusBar, SafeAreaView, ScrollView, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { IAnime, IGenre } from '../models';
+import { StatusBar, SafeAreaView, ScrollView, View } from 'react-native';
+import { IAnime, ICollectionApiResponse, IGenre, IResourceApiResponse } from '../models';
 import { RootStackParamList } from '../navigation';
 import { AnimesContext } from '../contexts'
-import { Badge, Card, Image, Tile } from 'react-native-elements';
+import { Badge, Tile } from 'react-native-elements';
 
 // Avec react-navigation, les composants qui représentent des écrans reçoivent automatiquement deux props:
 // - navigation: qui contient un ensemble de fonctions permettant de changer d'écran
@@ -24,11 +24,6 @@ interface AnimeDetailsProps {
   route: AnimeDetailsRouteProp;
 }
 
-// Cette interface décrit la structure attendue de la réponse à la requête AJAX
-interface AnimeDetailsApiResponse{
-  data:IAnime;
-}
-
 const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
   // Trouve l'ID de l'animé demandé dans les paramètres de la route
   const { id } = route.params;
@@ -37,6 +32,8 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
   const [genres, setGenres] = useState<IGenre[]>([]);
 
   const { actions, store } = useContext(AnimesContext);
+
+  const navigation = useNavigation();
 
   // Associe un comportement à la création du composant
   useEffect(
@@ -48,7 +45,7 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
         // Dès que la requête a répondu, transforme son contenu en objets JavaScript
         .then( response => response.json() )
         // Dès que la transformation est terminée, range le résultat dans la liste des animés
-        .then( (json: AnimeDetailsApiResponse) => {
+        .then( (json: IResourceApiResponse<IAnime>) => {
           setAnime(json.data);
           actions.addInStore(json.data);
         });
@@ -72,7 +69,7 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
           // Envoie une requête AJAX permettant de récupérer les genres de l'animé
           fetch(`https://kitsu.io/api/edge/${anime.relationships.genres.links.related}`)
           .then(response => response.json())
-          .then(json => setGenres(json.data))
+          .then( (json: ICollectionApiResponse<IGenre>) => setGenres(json.data))
         }
       }
     },
@@ -98,9 +95,11 @@ const AnimeDetails: FC<AnimeDetailsProps> = ({ route }) => {
               genres.map(
                 (genre, index) =>
                   <Badge
+                    key={index}
                     badgeStyle={{ marginLeft: '.25em', marginRight: '.25em', marginBottom: '.25em' }}
                     status="primary"
                     value={genre.attributes.name}
+                    onPress={() => navigation.navigate('GenreDetails', { id: genre.id, title: genre.attributes.name })}
                   />
               )
             }

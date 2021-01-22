@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { AllAnime, AnimeDetails } from './screens';
+import { AllAnime, AnimeDetails, GenreDetails } from './screens';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { RootStackParamList } from './navigation';
@@ -28,6 +28,7 @@ const App: FC = () => {
         <RootStack.Navigator initialRouteName="Home">
           <RootStack.Screen name="Home" component={AllAnime} />
           <RootStack.Screen name="AnimeDetails" options={({ route }) => ({ title: route.params.title })} component={AnimeDetails} />
+          <RootStack.Screen name="GenreDetails" options={({ route }) => ({ title: route.params.title })} component={GenreDetails} />
         </RootStack.Navigator>
       </NavigationContainer>
     </AnimesContext.Provider>

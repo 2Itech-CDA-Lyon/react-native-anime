@@ -3,7 +3,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import React, { FC, useEffect, useState, useContext } from 'react';
 import { StatusBar, SafeAreaView, ScrollView } from 'react-native';
 import AnimeList from '../components/AnimeList';
-import { IAnime } from '../models';
+import { IAnime, ICollectionApiResponse } from '../models';
 import { RootStackParamList } from '../navigation';
 import { AnimesContext } from '../contexts'
 
@@ -25,11 +25,6 @@ interface AllAnimeProps {
   route: AllAnimeRouteProp;
 }
 
-// Cette interface décrit la structure attendue de la réponse à la requête AJAX
-interface AllAnimeApiResponse {
-  data: IAnime[];
-}
-
 const AllAnime: FC<AllAnimeProps> = () => {
   // Retient l'état actuel de la liste des animés d'une exécution du composant à l'autre
   const [animes, setAnimes] = useState<IAnime[]>([]);
@@ -42,7 +37,7 @@ const AllAnime: FC<AllAnimeProps> = () => {
       // Dès que la requête a répondu, transforme son contenu en objets JavaScript
       .then( response => response.json() )
       // Dès que la transformation est terminée, range le résultat dans la liste des animés
-      .then( (json: AllAnimeApiResponse) => {
+      .then( (json: ICollectionApiResponse<IAnime>) => {
         setAnimes(json.data)
         for(let anime of json.data){
           actions.addInStore(anime);
